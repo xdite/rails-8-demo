@@ -20,22 +20,47 @@ test:
   <<: *default
   database: storage/test.sqlite3
 
-
-# Store production database in the storage/ directory, which by default
-# is mounted as a persistent Docker volume in config/deploy.yml.
+# Production configuration for PostgreSQL on Zeabur
 production:
   primary:
-    <<: *default
-    database: storage/production.sqlite3
+    adapter: postgresql
+    encoding: unicode
+    pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+    timeout: 5000
+    # Use Zeabur's PostgreSQL connection string
+    url: <%= ENV['POSTGRES_CONNECTION_STRING'] || ENV['POSTGRES_URI'] %>
+    # Fallback to individual environment variables if connection string is not available
+    host: <%= ENV['POSTGRES_HOST'] || ENV['POSTGRESQL_HOST'] %>
+    port: <%= ENV['POSTGRES_PORT'] || 5432 %>
+    database: <%= ENV['POSTGRES_DATABASE'] %>
+    username: <%= ENV['POSTGRES_USERNAME'] %>
+    password: <%= ENV['POSTGRES_PASSWORD'] %>
+    # Additional PostgreSQL settings
+    prepared_statements: false
+    advisory_locks: true
+    variables:
+      statement_timeout: 5000
   cache:
-    <<: *default
-    database: storage/production_cache.sqlite3
+    adapter: postgresql
+    encoding: unicode
+    pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+    timeout: 5000
+    url: <%= ENV['POSTGRES_CONNECTION_STRING'] || ENV['POSTGRES_URI'] %>
+    database: <%= ENV['POSTGRES_DATABASE'] %>_cache
     migrations_paths: db/cache_migrate
   queue:
-    <<: *default
-    database: storage/production_queue.sqlite3
+    adapter: postgresql
+    encoding: unicode
+    pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+    timeout: 5000
+    url: <%= ENV['POSTGRES_CONNECTION_STRING'] || ENV['POSTGRES_URI'] %>
+    database: <%= ENV['POSTGRES_DATABASE'] %>_queue
     migrations_paths: db/queue_migrate
   cable:
-    <<: *default
-    database: storage/production_cable.sqlite3
+    adapter: postgresql
+    encoding: unicode
+    pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+    timeout: 5000
+    url: <%= ENV['POSTGRES_CONNECTION_STRING'] || ENV['POSTGRES_URI'] %>
+    database: <%= ENV['POSTGRES_DATABASE'] %>_cable
     migrations_paths: db/cable_migrate
