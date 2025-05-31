@@ -1,5 +1,4 @@
 # syntax=docker/dockerfile:1
-# check=error=true
 
 # This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
 # docker build -t rails_8_demo .
@@ -66,4 +65,4 @@ ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
 # Start server via Thruster by default, this can be overwritten at runtime
 EXPOSE 80
-CMD ["sh", "-c", "if [ -z \"$SECRET_KEY_BASE\" ]; then export SECRET_KEY_BASE=$(openssl rand -hex 64); fi && ./bin/thrust ./bin/rails server"]
+CMD ["./bin/thrust", "./bin/rails", "server"]
