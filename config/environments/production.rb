@@ -23,7 +23,7 @@ Rails.application.configure do
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
   # Use cloud storage if configured, otherwise fall back to local storage
-  config.active_storage.service = ENV['ACTIVE_STORAGE_SERVICE']&.to_sym || :local
+  config.active_storage.service = ENV["ACTIVE_STORAGE_SERVICE"]&.to_sym || :local
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   config.assume_ssl = true

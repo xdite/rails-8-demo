@@ -17,11 +17,11 @@ class Book < ApplicationRecord
     return unless cover_image.attached?
 
     unless cover_image.blob.content_type.in?(%w[image/png image/jpg image/jpeg image/gif])
-      errors.add(:cover_image, '封面圖片必須是 PNG, JPG, JPEG 或 GIF 格式')
+      errors.add(:cover_image, "封面圖片必須是 PNG, JPG, JPEG 或 GIF 格式")
     end
 
     if cover_image.blob.byte_size > 5.megabytes
-      errors.add(:cover_image, '封面圖片大小不能超過 5MB')
+      errors.add(:cover_image, "封面圖片大小不能超過 5MB")
     end
   end
 
@@ -30,12 +30,12 @@ class Book < ApplicationRecord
 
     attachments.each do |attachment|
       unless attachment.blob.content_type.in?(%w[image/png image/jpg image/jpeg image/gif application/pdf text/plain])
-        errors.add(:attachments, '附件必須是圖片、PDF 或文字檔案')
+        errors.add(:attachments, "附件必須是圖片、PDF 或文字檔案")
         break
       end
 
       if attachment.blob.byte_size > 10.megabytes
-        errors.add(:attachments, '附件大小不能超過 10MB')
+        errors.add(:attachments, "附件大小不能超過 10MB")
         break
       end
     end
