@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1
+# checkcheck=skip=SecretsUsedInArgOrEnv
 
 # This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
 # docker build -t rails_8_demo .
