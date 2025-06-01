@@ -1,0 +1,22 @@
+name: rails-8-books-demo
+services:
+  app:
+    source:
+      type: git
+    environment:
+      RAILS_ENV: production
+      ACTIVE_STORAGE_SERVICE: local
+    volumes:
+      - id: storage
+        dir: /rails/storage
+    depends_on:
+      - postgres
+  
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: rails_8_demo_production
+      POSTGRES_USER: postgres
+    volumes:
+      - id: postgres-data
+        dir: /var/lib/postgresql/data 
