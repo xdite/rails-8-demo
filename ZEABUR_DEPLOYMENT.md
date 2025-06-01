@@ -76,20 +76,29 @@ GOOGLE_APPLICATION_CREDENTIALS=<path_to_service_account_json>
 
 你可以在 `config/master.key` 文件中找到 master key。
 
-### 5. 數據庫設置
+### 5. 數據庫和 Rails 8 組件設置（關鍵步驟！）
 
-部署完成後，運行以下命令來設置數據庫：
+部署完成後，**必須**運行以下命令來設置數據庫和 Rails 8 組件：
 
 ```bash
 # 在 Zeabur 控制台的終端中運行
 RAILS_ENV=production rails zeabur:setup_production_db
 ```
 
-或者分別運行：
+這個命令會自動安裝：
+- **Solid Queue**：Rails 8 的默認背景任務處理器
+- **Solid Cache**：Rails 8 的緩存系統
+- **Solid Cable**：Rails 8 的 WebSocket 連接處理器
+- **Active Storage**：檔案上傳和處理系統
+
+或者你也可以分別運行：
 
 ```bash
 RAILS_ENV=production rails db:create
 RAILS_ENV=production rails db:migrate
+RAILS_ENV=production rails solid_queue:install
+RAILS_ENV=production rails solid_cache:install
+RAILS_ENV=production rails solid_cable:install
 RAILS_ENV=production rails active_storage:install
 RAILS_ENV=production rails db:migrate
 RAILS_ENV=production rails assets:precompile
@@ -104,6 +113,15 @@ RAILS_ENV=production rails assets:precompile
 - 主要使用 `POSTGRES_CONNECTION_STRING` 或 `POSTGRES_URI`
 - 如果連接字符串不可用，會回退到個別環境變數
 - 包含 cache、queue 和 cable 的多數據庫配置
+
+### Rails 8 組件
+
+這個應用使用 Rails 8 的新特性：
+
+- **Solid Queue**：處理背景任務（如圖片分析、檔案處理）
+- **Solid Cache**：提供高效的緩存機制
+- **Solid Cable**：處理 WebSocket 連接
+- **Active Storage**：檔案上傳和管理
 
 ### Active Storage 配置
 
@@ -127,11 +145,14 @@ RAILS_ENV=production rails assets:precompile
 
 ## 🛠️ 實用命令
 
-### 檢查環境變數
+### 檢查環境變數和組件
 
 ```bash
-rails zeabur:check_postgres_env
-rails zeabur:check_active_storage
+rails zeabur:check_postgres_env        # 檢查 PostgreSQL 配置
+rails zeabur:check_active_storage      # 檢查 Active Storage 配置
+rails zeabur:check_volumes             # 檢查 Zeabur Volumes 配置
+rails zeabur:check_rails8_components   # 檢查 Rails 8 組件安裝狀態
+rails zeabur:check_all                 # 運行所有檢查
 ```
 
 ### 完整的生產環境設置
@@ -206,9 +227,10 @@ ACTIVE_STORAGE_SERVICE=google
 2. 如果使用自定義域名，請在 Zeabur 控制台中配置
 3. 建議在部署前先在本地測試 production 配置
 4. **重要**：配置 Zeabur Volumes 來避免檔案在容器重啟時遺失
-5. 啟用 Volumes 後，服務重啟會有短暫中斷
-6. 定期備份上傳的檔案
-7. 監控儲存空間使用量
+5. **關鍵**：必須安裝 Rails 8 組件（Solid Queue 等）才能正常使用檔案上傳功能
+6. 啟用 Volumes 後，服務重啟會有短暫中斷
+7. 定期備份上傳的檔案
+8. 監控儲存空間使用量
 
 ## 🔍 故障排除
 
@@ -226,6 +248,28 @@ ACTIVE_STORAGE_SERVICE=google
 RAILS_ENV=production rails assets:precompile
 ```
 
+### Rails 8 組件問題
+
+如果遇到 `solid_queue_jobs` 表不存在的錯誤：
+
+1. **檢查組件安裝狀態**：
+   ```bash
+   RAILS_ENV=production rails zeabur:check_rails8_components
+   ```
+
+2. **重新安裝組件**：
+   ```bash
+   RAILS_ENV=production rails zeabur:setup_production_db
+   ```
+
+3. **手動安裝缺失的組件**：
+   ```bash
+   RAILS_ENV=production rails solid_queue:install
+   RAILS_ENV=production rails solid_cache:install
+   RAILS_ENV=production rails solid_cable:install
+   RAILS_ENV=production rails db:migrate
+   ```
+
 ### Active Storage 問題
 
 1. **檔案上傳失敗**：檢查檔案大小和格式限制
@@ -233,6 +277,7 @@ RAILS_ENV=production rails assets:precompile
 3. **檔案遺失**：確認已正確配置 Zeabur Volumes
 4. **權限問題**：確保 `/rails/storage` 目錄有正確的讀寫權限
 5. **儲存空間不足**：檢查 Zeabur Volumes 使用量或考慮雲端儲存
+6. **背景任務失敗**：確認 Solid Queue 已正確安裝
 
 ### Zeabur Volumes 相關問題
 
@@ -259,6 +304,10 @@ RAILS_ENV=production rails assets:precompile
 這個應用包含：
 
 - ✅ 完整的 Books CRUD 功能
+- ✅ **Rails 8 新特性**
+  - 🚀 Solid Queue 背景任務處理
+  - 💾 Solid Cache 緩存系統
+  - 🔌 Solid Cable WebSocket 支援
 - ✅ **Active Storage 附件功能**
   - 📸 書籍封面圖片上傳
   - 📎 多檔案附件支援
@@ -298,10 +347,13 @@ RAILS_ENV=production rails assets:precompile
 - [ ] GitHub 倉庫已連接到 Zeabur
 - [ ] 環境變數已正確設置（`RAILS_MASTER_KEY` 等）
 - [ ] **Zeabur Volumes 已配置**（Volume ID: `storage`, Mount Directory: `/rails/storage`）
+- [ ] **Rails 8 組件已安裝**（運行 `rails zeabur:setup_production_db`）
 - [ ] 資料庫遷移已完成
 - [ ] Active Storage 已安裝
+- [ ] Solid Queue、Solid Cache、Solid Cable 已安裝
 - [ ] 應用可以正常訪問
 - [ ] 檔案上傳功能正常運作
 - [ ] 檔案在重啟後仍然存在
+- [ ] 背景任務正常處理
 
 祝你部署順利！🚀 

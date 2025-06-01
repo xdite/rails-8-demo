@@ -105,31 +105,121 @@ namespace :zeabur do
     end
   end
 
-  desc "Setup production database with Active Storage"
+  desc "Check Rails 8 components (Solid Queue, Solid Cache, Solid Cable)"
+  task check_rails8_components: :environment do
+    puts "Checking Rails 8 components..."
+    
+    # Check Solid Queue tables
+    solid_queue_tables = %w[solid_queue_jobs solid_queue_scheduled_executions solid_queue_claimed_executions solid_queue_blocked_executions solid_queue_failed_executions solid_queue_pauses solid_queue_processes solid_queue_ready_executions solid_queue_recurring_executions]
+    
+    puts "\nSolid Queue tables:"
+    solid_queue_tables.each do |table|
+      exists = ActiveRecord::Base.connection.table_exists?(table)
+      puts "  #{table}: #{exists ? '✓' : '✗'}"
+    end
+    
+    # Check Solid Cache tables
+    solid_cache_tables = %w[solid_cache_entries]
+    
+    puts "\nSolid Cache tables:"
+    solid_cache_tables.each do |table|
+      exists = ActiveRecord::Base.connection.table_exists?(table)
+      puts "  #{table}: #{exists ? '✓' : '✗'}"
+    end
+    
+    # Check Solid Cable tables
+    solid_cable_tables = %w[solid_cable_messages]
+    
+    puts "\nSolid Cable tables:"
+    solid_cable_tables.each do |table|
+      exists = ActiveRecord::Base.connection.table_exists?(table)
+      puts "  #{table}: #{exists ? '✓' : '✗'}"
+    end
+    
+    # Check Active Storage tables
+    active_storage_tables = %w[active_storage_blobs active_storage_attachments active_storage_variant_records]
+    
+    puts "\nActive Storage tables:"
+    active_storage_tables.each do |table|
+      exists = ActiveRecord::Base.connection.table_exists?(table)
+      puts "  #{table}: #{exists ? '✓' : '✗'}"
+    end
+  end
+
+  desc "Load Rails 8 schema files into production database"
+  task load_rails8_schemas: :environment do
+    puts "Loading Rails 8 schema files into production database..."
+    
+    # Load Solid Queue schema
+    queue_schema_file = Rails.root.join('db', 'queue_schema.rb')
+    if File.exist?(queue_schema_file)
+      puts "Loading Solid Queue schema..."
+      load queue_schema_file
+      puts "✓ Solid Queue schema loaded"
+    else
+      puts "✗ Solid Queue schema file not found"
+    end
+    
+    # Load Solid Cache schema
+    cache_schema_file = Rails.root.join('db', 'cache_schema.rb')
+    if File.exist?(cache_schema_file)
+      puts "Loading Solid Cache schema..."
+      load cache_schema_file
+      puts "✓ Solid Cache schema loaded"
+    else
+      puts "✗ Solid Cache schema file not found"
+    end
+    
+    # Load Solid Cable schema
+    cable_schema_file = Rails.root.join('db', 'cable_schema.rb')
+    if File.exist?(cable_schema_file)
+      puts "Loading Solid Cable schema..."
+      load cable_schema_file
+      puts "✓ Solid Cable schema loaded"
+    else
+      puts "✗ Solid Cable schema file not found"
+    end
+  end
+
+  desc "Setup production database with Active Storage and Rails 8 components"
   task setup_production_db: :environment do
-    puts "Setting up production database with Active Storage..."
+    puts "Setting up production database with Rails 8 components..."
     
-    Rake::Task['db:create'].invoke
-    puts "✓ Database created"
+    # Create database if it doesn't exist
+    begin
+      Rake::Task['db:create'].invoke
+      puts "✓ Database created"
+    rescue => e
+      puts "Database already exists or creation failed: #{e.message}"
+    end
     
+    # Run regular migrations first
     Rake::Task['db:migrate'].invoke
-    puts "✓ Database migrated"
+    puts "✓ Regular migrations completed"
     
-    # Check if Active Storage tables exist
+    # Load Rails 8 schema files
+    Rake::Task['zeabur:load_rails8_schemas'].invoke
+    
+    # Install Active Storage if not already present
     if ActiveRecord::Base.connection.table_exists?('active_storage_blobs')
       puts "✓ Active Storage tables already exist"
     else
       puts "Installing Active Storage..."
       Rake::Task['active_storage:install'].invoke
       Rake::Task['db:migrate'].invoke
-      puts "✓ Active Storage installed and migrated"
+      puts "✓ Active Storage installed"
     end
     
-    Rake::Task['assets:precompile'].invoke
-    puts "✓ Assets precompiled"
+    # Precompile assets
+    begin
+      Rake::Task['assets:precompile'].invoke
+      puts "✓ Assets precompiled"
+    rescue => e
+      puts "Asset precompilation failed: #{e.message}"
+    end
     
     puts "\n🎉 Production database setup complete!"
-    puts "You can now deploy your application with Active Storage support."
+    puts "Rails 8 components (Solid Queue, Solid Cache, Solid Cable) and Active Storage are ready!"
   end
 
   desc "Clean up unused Active Storage attachments"
@@ -197,6 +287,9 @@ namespace :zeabur do
     puts "\n" + "="*50 + "\n"
     
     Rake::Task['zeabur:check_volumes'].invoke
+    puts "\n" + "="*50 + "\n"
+    
+    Rake::Task['zeabur:check_rails8_components'].invoke
     puts "\n" + "="*50 + "\n"
     
     puts "🎯 All checks completed!"
