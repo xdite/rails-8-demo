@@ -42,24 +42,30 @@ RAILS_MASTER_KEY=<your_master_key>
 
 你可以在 `config/master.key` 文件中找到 master key。
 
-### 4. 數據庫設置
+### 4. 自動數據庫設置
 
-部署完成後，運行以下命令來設置數據庫：
+**好消息！** 應用的 Docker 配置已經包含自動數據庫設置：
+
+- Docker entrypoint 會自動運行 `rails db:prepare`
+- 這會自動創建數據庫（如果不存在）並運行遷移
+- 無需手動執行額外的數據庫設置命令
+
+如果需要手動操作，你也可以運行：
 
 ```bash
 # 在 Zeabur 控制台的終端中運行
 RAILS_ENV=production rails zeabur:setup_production_db
 ```
 
-或者分別運行：
-
-```bash
-RAILS_ENV=production rails db:create
-RAILS_ENV=production rails db:migrate
-RAILS_ENV=production rails assets:precompile
-```
-
 ## 🔧 配置說明
+
+### Docker 配置
+
+Dockerfile 已經配置為支持 PostgreSQL：
+
+- 包含 `postgresql-client` 和 `libpq5` 運行時庫
+- 包含 `libpq-dev` 開發頭文件用於編譯 pg gem
+- 自動運行數據庫準備命令
 
 ### 數據庫配置
 
@@ -82,7 +88,7 @@ RAILS_ENV=production rails assets:precompile
 rails zeabur:check_postgres_env
 ```
 
-### 完整的生產環境設置
+### 完整的生產環境設置（如果需要手動執行）
 
 ```bash
 RAILS_ENV=production rails zeabur:setup_production_db
@@ -92,7 +98,8 @@ RAILS_ENV=production rails zeabur:setup_production_db
 
 1. 確保 `config/master.key` 文件存在且包含正確的密鑰
 2. 如果使用自定義域名，請在 Zeabur 控制台中配置
-3. 建議在部署前先在本地測試 production 配置
+3. Docker 會自動處理數據庫設置，通常不需要手動干預
+4. 建議在部署前先在本地測試 production 配置
 
 ## 🔍 故障排除
 
@@ -101,14 +108,23 @@ RAILS_ENV=production rails zeabur:setup_production_db
 1. 檢查環境變數是否正確設置
 2. 確認 PostgreSQL 服務正在運行
 3. 檢查網絡連接和防火牆設置
+4. 查看應用日誌中的數據庫連接錯誤
 
 ### 資產編譯問題
 
-確保在部署時運行了資產預編譯：
+Docker 構建過程會自動預編譯資產，如果有問題：
 
 ```bash
 RAILS_ENV=production rails assets:precompile
 ```
+
+### Docker 構建問題
+
+如果 Docker 構建失敗，檢查：
+
+1. PostgreSQL 客戶端庫是否正確安裝
+2. pg gem 是否成功編譯
+3. 網絡連接是否正常
 
 ## 📚 功能特性
 
@@ -120,6 +136,8 @@ RAILS_ENV=production rails assets:precompile
 - ✅ 表單驗證和錯誤處理
 - ✅ PostgreSQL 生產環境支持
 - ✅ 多數據庫配置（主庫、緩存、隊列、Cable）
+- ✅ Docker 容器化部署
+- ✅ 自動數據庫設置
 
 ## 🎯 訪問應用
 
@@ -129,5 +147,21 @@ RAILS_ENV=production rails assets:precompile
 2. 添加新書籍
 3. 查看、編輯和刪除書籍
 4. 享受現代化的用戶界面
+
+## 🐳 Docker 本地測試
+
+如果想在本地測試 Docker 配置：
+
+```bash
+# 構建 Docker 鏡像
+docker build -t rails-books-app .
+
+# 運行容器（需要設置環境變數）
+docker run -d -p 3000:80 \
+  -e RAILS_MASTER_KEY=<your_master_key> \
+  -e POSTGRES_CONNECTION_STRING=<your_postgres_url> \
+  --name rails-books-app \
+  rails-books-app
+```
 
 祝你部署順利！🚀 
