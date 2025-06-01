@@ -1,21 +1,64 @@
 <div class="container mx-auto px-4 py-8">
-  <div class="max-w-2xl mx-auto">
+  <div class="max-w-4xl mx-auto">
     <div class="bg-white rounded-lg shadow-lg p-8">
       <div class="mb-6">
         <%= link_to "← Back to Books", books_path, class: "text-blue-500 hover:text-blue-600 font-medium" %>
       </div>
       
-      <div class="mb-8">
-        <h1 class="text-4xl font-bold text-gray-800 mb-4"><%= @book.title %></h1>
-        <p class="text-xl text-gray-600 mb-6">by <%= @book.author %></p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <!-- 封面圖片 -->
+        <div class="md:col-span-1">
+          <% if @book.cover_image.attached? %>
+            <div class="mb-4">
+              <h3 class="text-lg font-semibold text-gray-700 mb-3">封面圖片</h3>
+              <%= image_tag @book.cover_image, class: "w-full max-w-sm mx-auto rounded-lg shadow-md" %>
+            </div>
+          <% else %>
+            <div class="bg-gray-100 rounded-lg p-8 text-center">
+              <p class="text-gray-500">尚未上傳封面圖片</p>
+            </div>
+          <% end %>
+        </div>
         
-        <% if @book.description.present? %>
-          <div class="bg-gray-50 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-gray-700 mb-3">Description</h3>
-            <p class="text-gray-600 leading-relaxed"><%= simple_format(@book.description) %></p>
-          </div>
-        <% end %>
+        <!-- 書籍資訊 -->
+        <div class="md:col-span-2">
+          <h1 class="text-4xl font-bold text-gray-800 mb-4"><%= @book.title %></h1>
+          <p class="text-xl text-gray-600 mb-6">by <%= @book.author %></p>
+          
+          <% if @book.description.present? %>
+            <div class="bg-gray-50 rounded-lg p-6 mb-6">
+              <h3 class="text-lg font-semibold text-gray-700 mb-3">Description</h3>
+              <p class="text-gray-600 leading-relaxed"><%= simple_format(@book.description) %></p>
+            </div>
+          <% end %>
+        </div>
       </div>
+      
+      <!-- 其他附件 -->
+      <% if @book.attachments.attached? %>
+        <div class="mb-8">
+          <h3 class="text-lg font-semibold text-gray-700 mb-4">其他附件</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <% @book.attachments.each do |attachment| %>
+              <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                <% if attachment.image? %>
+                  <%= image_tag attachment, class: "w-full h-32 object-cover rounded mb-3" %>
+                <% else %>
+                  <div class="w-full h-32 bg-gray-100 rounded mb-3 flex items-center justify-center">
+                    <span class="text-4xl">📄</span>
+                  </div>
+                <% end %>
+                <div>
+                  <p class="text-sm font-medium text-gray-800 truncate"><%= attachment.filename %></p>
+                  <p class="text-xs text-gray-500"><%= number_to_human_size(attachment.byte_size) %></p>
+                  <%= link_to "下載", rails_blob_path(attachment, disposition: "attachment"), 
+                              class: "inline-block mt-2 text-blue-500 hover:text-blue-600 text-sm" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
       
       <div class="flex space-x-4">
         <%= link_to "Edit Book", edit_book_path(@book), class: "bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200" %>
